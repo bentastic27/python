@@ -850,6 +850,7 @@ def load_kube_config_from_dict(config_dict, context=None,
         temp_file_path=temp_file_path)
 
     if client_configuration is None:
+        _validate_v1_kube_config_dict(config_dict)
         config = type.__call__(Configuration)
         loader.load_and_set(config)
         Configuration.set_default(config)
@@ -889,3 +890,58 @@ def new_client_from_config_dict(
                                persist_config=persist_config,
                                temp_file_path=temp_file_path)
     return ApiClient(configuration=client_config)
+
+
+def _validate_v1_kube_config_dict(config_dict):
+    if type(config_dict) is not dict:
+        raise ConfigException(
+            'Invalid kube-config dict. '
+            'No configuration found.')
+    
+    if type(config_dict["clusters"]) is list:
+        for cluster in config_dict["clusters"]:
+            if "cluster" not in cluster.keys():
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'clusters[*]["cluster"] must be set')
+
+            if type(cluster["cluster"]) is not dict:
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'clusters[*]["cluster"] must be dict')
+    else:
+        raise ConfigException(
+            'Invalid kube-config dict. '
+            'clusters must be a list')
+    
+    if type(config_dict["contexts"]) is list:
+        for context in config_dict["contexts"]:
+            if "context" not in context.keys():
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'context[*]["context"] must be set')
+
+            if type(context["context"]) is not dict:
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'contexts[*]["context"] must be dict')
+    else:
+        raise ConfigException(
+            'Invalid kube-config dict. '
+            'contexts must be a list')
+
+    if type(config_dict["users"]) is list:
+        for user in config_dict["users"]:
+            if "user" not in user.keys():
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'users[*]["user"] must be set')
+            
+            if type(user["user"]) is not dict:
+                raise ConfigException(
+                    'Invalid kube-config dict. '
+                    'users[*]["user"] must be dict')
+    else:
+        raise ConfigException(
+            'Invalid kube-config dict. '
+            'users must be a list')
